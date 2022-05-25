@@ -62,3 +62,47 @@ $ echo JAVA_HOME
 
 
 ## License
+
+# set up Anaconda for Mac M1
+
+1.download Anaconda for mac m1 from offical website
+
+2.zsh: Command Not Found Conda
+
+first open the .zshrc file and then write the following code there
+```bash
+$ export PATH="$PATH:/Users/Dz/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Users/Dz/.rvm/bin"
+```
+
+
+Then, you can run the following command to check it.
+```bash
+$ source ~/.zshrc
+$ echo $HOME
+$ echo $PATH
+```
+
+
+3.Problems installing python packages on Mac M1
+
+using conda to use python in a virtual environment
+
+First Enable the open with rosetta in your zsh.
+
+```bash
+# create environment in conda
+$ conda create -n venv python=3.8 # with your python version
+
+# activate
+$ conda activate venv
+```
+
+You need to enable that specific channel to get that package with this command:
+```bash
+# config channel
+conda config --append channels conda-forge # available channel name
+
+# then install
+conda install --yes --file requirements.txt
+
+```
