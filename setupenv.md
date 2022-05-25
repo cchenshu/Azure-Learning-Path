@@ -108,18 +108,26 @@ conda install --yes --file requirements.txt
 ```
 
 
-#Git
+# Git
 ```bash
 git -version
+
 git init
+
 git status
+
 #create .gitignore files to hide files
+
 git add .
+
 git commit -m "message"
+
 #pushing an existing repo from the command line
 git remote add origin //https:github.com...
 
-git pull #fix problems for difference between remote and local 
+#fix problems for difference between remote and local 
+git pull
+
 git push 
 
 ```
