@@ -63,6 +63,63 @@ dbutils.fs.mount(
   
 ##### _Step three_
 ✨Azure Databricks monitoring with Azure Log Analytics
-  
+  ###### _About Spark driver logs_
 
-**Yeah!**
+Spark driver logs are composed of Standard output, Standard error and Log4j output logs.
+And all key Spark jobs processing logs could be found in Log4j output logs, which could be sent to Azure Log Analytics workspace with the help of [spark-monitoring](https://github.com/mspnp/spark-monitoring) library.   
+
+###### _Setup spark-monitoring in Databricks Spark cluster_
+Install Databricks CLI, following [this guide](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/cli/).
+
+Install JDK of version 1.8 or higher.
+
+###### _Building spark-monitoring library jars_
+Clone repository spark-monitoring repo.
+```sh
+  git clone https://github.com/mspnp/spark-monitoring
+```
+Build jars following either Docker or Maven option described in the [README](https://github.com/mspnp/spark-monitoring/blob/main/README.md#build-the-azure-databricks-monitoring-library) markdown.
+
+###### _Upload shell and jars to DBFS of Databricks_
+  ```sh
+    # Skip below two commands if it's been done previously
+    # run in git bash
+    export DATABRICKS_TOKEN=<Databricks PAT token>
+    export DATABRICKS_HOST=<Databricks workspace URL>
+  ```
+Edit /spark-monitoring/src/spark-listeners/scripts/spark-monitoring.sh file, to save the target [_Log Analytics workspace ID and access key_](https://docs.microsoft.com/en-us/azure/azure-monitor/agents/agent-windows#workspace-id-and-key) to below entries, and those two values could be found here.
+  ```sh
+    export LOG_ANALYTICS_WORKSPACE_ID={workspace ID}
+    export LOG_ANALYTICS_WORKSPACE_KEY={access key}
+  ```
+  ```sh
+    # MAKE DIRECTORY AND UPLOAD .SHELL FILE
+    dbfs mkdirs dbfs:/databricks/spark-monitoring 
+    dbfs cp <local path to spark-monitoring.sh> dbfs:/databricks/spark-monitoring/spark-monitoring.sh
+  ```
+  ```sh
+    # UPLOAD .JAR FILES
+    #.sh and jar files are in the same directory: /databricks/spark-monitoring/ 
+    dbfs cp --overwrite --recursive <local path to target folder> dbfs:/databricks/spark-monitoring/ 
+    dbfs cp --overwrite --recursive ~/Downloads/target dbfs:/databricks/spark-monitoring/
+  ```
+###### _Configure Databrick Spark cluster_
+Add the copied spark-monitoring shell as _Init Scripts_ of the target Databricks Spark cluster. 
+```  
+Type          DBFS 
+File path     dbfs:/databricks/spark-monitoring/spark-monitoring.sh    
+``` 
+  
+###### _Check Spark cluster Log4j output logs in Log Analytics workspace_
+    SparkListenerEvent_CL https://github.com/mspnp/spark-monitoring/blob/main/README.md#sparklistenerevent_cl
+    SparkMetric_CL https://github.com/mspnp/spark-monitoring/blob/main/README.md#sparkmetric_cl
+Go to Log Analytics workspace and check relevant Log4j output logs by querying _SparkLoggingEventCL_ table from _Custom Logs_ category.
+```sh
+  # Kusto queries
+  # Query all Log4j output logs
+  SparkLoggingEventCL
+  # Query error logs
+  SparkLoggingEventCL
+  | where Level == "ERROR"
+  ```
+
