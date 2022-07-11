@@ -60,5 +60,9 @@ dbutils.fs.mount(
   
 ✨Store  master data  to
 - *testcontainer/config/hon_edm_dynamo_customers/customer_psr/master_data*
+  
+##### _Step three_
+✨Azure Databricks monitoring with Azure Log Analytics
+  
 
 **Yeah!**
