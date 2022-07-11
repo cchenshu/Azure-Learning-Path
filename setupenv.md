@@ -9,17 +9,15 @@ Run the project in docker dev-container
 
 3. click the button [reopen in a contain]
 
-*Load the project*
-
-*There are two ways of doing this:*
+**Load the project**
 
 1)Load VS Code, and it should ask you to re-open the project in a container, if it finds the .devcontainer folder.
 
-2)If not, you can open the Command Palette, and run “Remote-Containers: Rebuild and Reopen in Container”.
+2)If not, you can open the Command Palette, and run “Remote-Containers: **Rebuild and Reopen in Container**”.
 
-The first time you do this, it may take a little while as it needs to build the Docker image. After the first load, each time you open the project, it should be much quicker (Unless you change the Dockerfile).
+The first time you do this, it may take a little while as it needs to build the **Docker image**. After the first load, each time you open the project, it should be much quicker (Unless you change the Dockerfile).
 
-You are now using the Dev Container in VS Code. When you open the terminal, you are inside the container. Plugins are running inside the container too.
+You are now using the **Dev Container** in VS Code. When you open the terminal, you are inside the container. Plugins are running inside the container too.
 
 ### Error  :  Java gateway process exited before sending its port number 
 
