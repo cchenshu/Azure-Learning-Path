@@ -5,6 +5,43 @@
 - [spark-monitoring-metrics](https://github.com/mspnp/spark-monitoring/blob/main/perftools/deployment/readme.md#step-1-deploy-log-analytics-with-spark-metrics)
 
 ## Useful queries
+```sh
+# Performance testing 
+# Show metrics CPU/Memory/Number of records updated every minute
+SparkMetric_CL
+| where name_s contains "driver.jvm.total."
+| where executorId_s == "driver"
+| extend memUsed_GB = value_d / 1000000000
+| project TimeGenerated, memUsed_GB
+| summarize max(memUsed_GB) by bin(TimeGenerated, 1m)
+| join kind=inner (
+    SparkMetric_CL
+| where name_s contains "executor.RunTime"
+| project TimeGenerated , runTime=count_d
+| join kind=inner (
+    SparkMetric_CL
+| where name_s contains "executor.cpuTime"
+| project TimeGenerated , cpuTime=count_d/1000000, clusterName_s
+) on TimeGenerated
+| extend cpuUsage=(cpuTime/runTime)*100
+| summarize max(cpuUsage) by bin(TimeGenerated, 1m), clusterName_s
+| order by TimeGenerated asc nulls last
+) on TimeGenerated
+|join kind=fullouter (
+SparkLoggingEvent_CL
+| where Message has 'psr_msg_type' and Message has 'tracking'
+| extend _message=parse_json(tostring(parse_json(Message).message))
+| extend _cnt=tolong(_message.['cnt'])
+| extend _table_name=_message.['table_name']
+| extend _tmp=strcat(tostring(_message.['ts']),":00")
+| extend _ts=split(_tmp,",")
+| extend _timet=strcat(_ts[0],_ts[1])
+| extend _time=todatetime(_timet)
+| project  _cnt, _table_name, _time
+| summarize max(_cnt) by _time,tostring(_table_name)
+| order by _time asc nulls last
+) on $left.TimeGenerated == $right._time;
+```
 ``` sh
 # Databricks errors
 SparkLoggingEvent_CL
