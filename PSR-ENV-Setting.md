@@ -67,7 +67,7 @@ dbutils.fs.mount(
 
 Spark driver logs are composed of Standard output, Standard error and Log4j output logs.
 And all key Spark jobs processing logs could be found in Log4j output logs, which could be sent to Azure Log Analytics workspace with the help of [spark-monitoring](https://github.com/mspnp/spark-monitoring) library.   
-
+_Tip : make sure the name of the cluster does not contain ' single quotes_
 ###### _Setup spark-monitoring in Databricks Spark cluster_
 Install Databricks CLI, following [this guide](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/cli/).
 
