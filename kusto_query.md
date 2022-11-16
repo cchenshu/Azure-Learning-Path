@@ -68,24 +68,28 @@ SparkLoggingEvent_CL
 # Pipeline status 
 # Elapsed time/duration for a task
 let results = SparkLoggingEvent_CL
-    | where Message has 'source_system' and Message has "task_run_id"
+    | where Message has 'source_system' and Message has "run_id"
     | extend _job_name = tostring(parse_json(Message).job_name)
     | extend _job_id = tostring(parse_json(Message).job_id)
-    | extend _task_run_id = tostring(parse_json(Message).task_run_id)
-    | extend _message1 = tostring(parse_json(Message).message)
-    | summarize endtime1 = arg_max(TimeGenerated, *) by _job_name
+    | extend _run_id = tostring(parse_json(Message).run_id)
+    | summarize endtime = arg_max(TimeGenerated, *) by _run_id
     | join kind = inner (
         SparkLoggingEvent_CL
-        | where Message has 'source_system' and Message has "task_run_id"
+        | where Message has 'source_system' and Message has "run_id"
         | extend _job_name = tostring(parse_json(Message).job_name)
         | extend _job_id = tostring(parse_json(Message).job_id)
-        | extend _task_run_id = tostring(parse_json(Message).task_run_id)
-        | extend _message2 = tostring(parse_json(Message).message)
+        | extend _run_id = tostring(parse_json(Message).run_id)
         )
-        on _job_id;
+        on _run_id;
 results
-| summarize starttime = arg_min(TimeGenerated, *), endtime = arg_max(TimeGenerated, *) by _task_run_id1
-| where endtime > starttime and endtime - starttime > 3m
+| summarize starttime = arg_min(TimeGenerated, *) by _run_id
+| join kind = leftouter(
+DatabricksJobs
+    | where ActionName contains_cs "run" and ActionName!="runTriggered"
+    | extend _run_id = tostring(parse_json(RequestParams).multitaskParentRunId)
+    | summarize endtime = arg_max(TimeGenerated, *) by _run_id
+    | project _run_id, ActionName
+    ) on _run_id
 | extend NewAge=replace(@'master_data_source', @'L2R', _job_name)
 | extend NewAge=replace(@'master_data_transform', @'R2P', NewAge)
 | extend NewAge=replace(@'event_data_transform', @'L2P', NewAge)
@@ -99,11 +103,14 @@ results
     _job_id1,
     _source_system,
     _customer_id,
-    _task_run_id1,
-    stage,
-    starttime,
-    endtime,
-    duration = datetime_diff('minute', endtime, starttime)
+    _run_id1,
+    tostring(ActionName),
+    tostring(stage),
+    tostring(starttime),
+    tostring(endtime),
+    duration = tostring(datetime_diff('minute', endtime, starttime)),
+    clusterName_s,
+    clusterId_s
 | order by starttime desc nulls last
 ```
 
@@ -137,4 +144,39 @@ SparkLoggingEvent_CL
     durationMs_triggerExecution,
     sink_description,
     sink_numOutputRows 
+```
+```sh
+let results = DatabricksJobs
+    | where ActionName contains_cs "run" and ActionName!="runTriggered"
+    | extend multitaskParentRunId = tostring(parse_json(RequestParams).multitaskParentRunId)
+    | summarize endtime = arg_max(TimeGenerated, *) by multitaskParentRunId
+    | join kind = inner (
+        DatabricksJobs
+        | extend multitaskParentRunId = tostring(parse_json(RequestParams).multitaskParentRunId))
+        on multitaskParentRunId;
+results
+| summarize starttime = arg_min(TimeGenerated, *) by multitaskParentRunId
+| where starttime <= endtime and isnotempty(multitaskParentRunId)
+| extend timetaken = datetime_diff('minute', endtime, starttime)
+| extend taskkey = tostring(parse_json(RequestParams).taskKey)
+| extend jobId = tostring(parse_json(RequestParams).jobId)
+| project multitaskParentRunId, starttime, endtime, timetaken, taskkey, ActionName, jobId
+| join kind=leftouter  (
+    DatabricksJobs
+    | where ActionName == "runTriggered"
+    | extend multitaskParentRunId = tostring(parse_json(RequestParams).runId)
+    | project ActionName, multitaskParentRunId, TimeGenerated
+    )
+    on multitaskParentRunId
+| extend triggeredtimetaken = datetime_diff('minute', starttime, TimeGenerated)
+| project
+    TimeGenerated,
+    starttime,
+    endtime,
+    timetaken,
+    ActionName,
+    multitaskParentRunId,
+    jobId,
+    taskkey,
+    triggeredtimetaken
 ```
