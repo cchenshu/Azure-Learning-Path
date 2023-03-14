@@ -18,6 +18,7 @@ Purpose:  decouple the application and data (for data protection)
 ✨Register an Azure Active Directory application
 - *App registration*
 - *Go to Certificates & secrets, create client secret, should save the secret id and value*
+
 ✨Create an Azure key vault instance and secret scope
 - *Creating Azure Key Vault, go to Secrets, create new secret, set secret value equal to client secret value in AAD*
 - *Create Azure Databricks instance*
