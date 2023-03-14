@@ -16,13 +16,16 @@ Purpose:  decouple the application and data (for data protection)
 
 
 ✨Register an Azure Active Directory application
+- *App registration*
+- *Go to Certificates & secrets, create client secret, should save the secret id and value*
 
   ✨Create an Azure key vault instance and secret scope
-  - *Should save the value when creating Azure Key Vault*
+  - *Creating Azure Key Vault, go to Secrets, create new secret, set secret value equal to client secret value in AAD*
   - *Create Azure Databricks instance*
  - *https://<per-workspace-url>/#secrets/createScope*
   - *Manage Principal----Creator(Premium tier for ADB)/All Users(Standard)*
 - *Save the client secret in the Azure key vault*
+  -*Go to storage account, Access Control--Role Assignment--Add aad app as Owner*
 
 ✨Assign roles
   
@@ -37,7 +40,7 @@ configs = {"fs.azure.account.auth.type": "OAuth",
           "fs.azure.account.oauth2.client.secret": dbutils.secrets.get(scope="<scope-name>",key="<service-credential-key-name>"),
           "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/<directory-id>/oauth2/token"}
 ```
-`Issue: Enable soft delete for blobs/containers @ Storage--> DataProtection`
+`Issue: Should disable soft delete for blobs/containers @ Storage--> DataProtection`
 ```
 # Mount filesystem
 dbutils.fs.mount(
