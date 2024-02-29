@@ -1,4 +1,5 @@
 ## Install docker environment
+refer to this link for more information [link](https://www.cnblogs.com/AllenMaster/p/13541680.html)
 ## Build docker image and test locally
 - `cd file-upload-api`
 - `docker compose up -d`
@@ -29,6 +30,8 @@
 - `kubectl apply -f azure-app-deployment.yaml`    
 - `kubectl apply -f azure-app-service.yaml`
 - `kubectl get service azure-app`
+
+
   
 - Log in to Azure portal and and click: 
   - aks-cluster -> Services and ingresses -> fileupload -> External IP  
